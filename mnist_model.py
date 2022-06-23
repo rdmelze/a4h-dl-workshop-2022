@@ -22,6 +22,7 @@ validation_dataset = datasets.MNIST(
     train=False,
     transform=transforms.ToTensor())
 
+# dataloaders shuffle and batch data for you in the train and val loops
 train_loader = torch.utils.data.DataLoader(
     dataset=train_dataset,
     batch_size=batch_size,
@@ -46,21 +47,32 @@ for i in range(10):
     plt.imshow(X_train[i,:,:,:].numpy().reshape(28,28), cmap="gray_r")
     plt.title('Class: '+str(y_train[i].item()))
 
+plt.show()
+
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.fc1 = nn.Linear(28*28, 50)
+        # weights for fully connected layers
+        self.fc1 = nn.Linear(28*28, 50) # 28 * 28 images
         self.fc2 = nn.Linear(50, 50)
-        self.fc3 = nn.Linear(50, 10)
+        self.fc3 = nn.Linear(50, 10)    # 10 classes
+
+        self.relu = nn.ReLU() # activation function
 
     def forward(self, x):
-        x = x.view(-1, 28*28)
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        return F.log_softmax(self.fc3(x), dim=1)
+        x = x.view(-1, 28*28)      # unrolling images. -1 for abitrary batch size
+        x = self.relu(self.fc1(x)) # ReLU activations
+        x = self.relu(self.fc2(x))
+        x = self.fc3(x)            # linear output layer
+        return x
 
 model = Net().to(device)
+
+# sgd optimizer with momentum
 optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=0.5)
+
+# no learning rate schedule ...
+
 criterion = nn.CrossEntropyLoss()
 
 print(model)
@@ -116,7 +128,8 @@ def validate(loss_vector, accuracy_vector):
         val_loss, correct, len(validation_loader.dataset), accuracy))
 
 
-epochs = 10
+# call training loop
+epochs = 2
 
 lossv, accv = [], []
 for epoch in range(1, epochs + 1):
@@ -131,3 +144,4 @@ plt.figure(figsize=(5,3))
 plt.plot(np.arange(1,epochs+1), accv)
 plt.title('validation accuracy');
 
+plt.show()
